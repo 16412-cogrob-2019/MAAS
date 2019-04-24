@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch> 
+    <!-- arguments -->
+    <arg name="robot_name"/>
+    <arg name="init_pose_x"/>
+    <arg name="init_pose_y"/>
+    <arg name="init_pose_a"/>
+    <arg name="gui" default="true"/>
+   
+    <!-- SPAWN ROBOT -->
+    <group ns="$(arg robot_name)">
+        <include file="turtlebot_world_navigation.launch">
+            <arg name="robot_namespace" value="$(arg robot_name)" />
+            <arg name="init_pose" value="-x $(arg init_pose_x) -y $(arg init_pose_y) -z 0.0 -R 0 -P 0 -Y $(arg init_pose_a)" />
+        </include>
+        <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+            <param name="publish_frequency" type="double" value="30.0" />
+        </node>
+    </group>
+    <!-- MOVE BASE -->  
+    <!--<include file="$(find project_turtleplan)/launch/bringTurtles/bring_movebase.launch">
+        <arg name="namespace_prefix" value="$(arg robot_name)" />
+    </include>
+    -->	
+   </launch>
