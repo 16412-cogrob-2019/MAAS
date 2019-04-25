@@ -14,13 +14,11 @@ class MAAS_Controller:
     def __init__(self):
 
          # subscribers
-        self.mcts_sub = rospy.Subscriber("/maas/data", String, self.data_callback)
+        self.mcts_sub = rospy.Subscriber("/sample/data", String, self.data_callback)
 	# POI command publisher   	
 	self.goto_pub = rospy.Publisher('/sample/goto', String, queue_size = 10) # jsonified data
- 	    
-     
-
-     
+	    
+    
     
     def data_callback(self, data):
 
@@ -32,7 +30,7 @@ class MAAS_Controller:
 	
 	# get POI
 	message = json.loads(data.data)
-	poi = message["POI"][0]
+	poi = message["sample"][0]
 	#agent_id = sample["agent_id"]
 	x = poi["x"]
 	y = poi["y"]
@@ -65,7 +63,7 @@ def main():
     rate = rospy.Rate(pub_rate)
 
     while (not rospy.is_shutdown()):
-        print("Subsriber is alive")
+        print("Controller is alive")
         # ros sleep (sleep to maintain loop rate)
         rate.sleep()
 

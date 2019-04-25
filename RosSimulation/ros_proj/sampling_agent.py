@@ -26,8 +26,6 @@ class SamplingAgent:
 	self.y = 2
 	self.z = 4
 
-
-
         # Boolean variables for sampling taks 
         self.active_task = False
 
@@ -57,9 +55,13 @@ class SamplingAgent:
         # TurtleBot will stop if we don't keep telling it to move.  How often should we tell it to move? 10 HZ
         self.rate = rospy.Rate(10)
 
-    def go_to_waypoint():
+    def go_to_waypoint(self, data):
+
 	self.active_task = False
-	
+	print("I got a command to move")
+	print(data)
+
+    	
 
     # publish a sample 
     def publish_sample(self):
@@ -91,35 +93,11 @@ class SamplingAgent:
 
         # as long as you haven't ctrl + c keeping doing...
         while not rospy.is_shutdown():
-            #if self.bump:
-            #    # STOP
-            #    move_cmd.linear.x = 0
-            #    move_cmd.angular.z = 0
-            #else:
-            #    # FORWARD SLOWLY
             move_cmd.linear.x = self.lin_speed
             move_cmd.angular.z = 0
-
-	    # publish the current sample
 	    self.publish_sample()	
-            # publish the velocity
-            #self.cmd_vel.publish(move_cmd)
-            # wait for 0.1 seconds (10 HZ) and publish again
             self.rate.sleep()
-
-    def process_bump_sensing(self, data):
-        """
-        If bump data is received, process the data
-        data.bumper: LEFT (0), CENTER (1), RIGHT (2)
-        data.state: RELEASED (0), PRESSED (1)
-        :param data: Raw message data from bump sensor 
-        :return: None
-        """
-        if data.state == BumperEvent.PRESSED:
-            self.bump = True
-        rospy.loginfo("Bumper Event")
-        rospy.loginfo(data.bumper)
-
+    
     def shutdown(self):
         """
         Pre-shutdown routine. Stops the robot before rospy.shutdown 
