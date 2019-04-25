@@ -18,6 +18,9 @@ class MAAS_node:
         # subscribers
         self.sample_sub = rospy.Subscriber("/sample/data", String, self.sampled_data_callback)
 
+        self.status_sub = rospy.Subscriber('/update/status', String, self.status_data_callback)
+
+
         # publishers
         self.maas_pub = rospy.Publisher('/maas/data', String, queue_size = 10) # jsonified data
 
@@ -49,6 +52,22 @@ class MAAS_node:
 
  	self.json_dict_samples['sample_values'].append({"agent_id":agent_id, "x": x, "y": y,  "z": z, "measurement_type":measurement_type, "measurement_value":measurement_value})
 	#print(self.json_dict['sample_values'])
+
+    def status_data_callback(self, data):
+	
+	print("receieved status data")
+	message = json.loads(data.data)
+	status = message["status"][0]
+
+	# get the agent_id, x and y and z locations of the agent's location, measurement type (e.g. depth), and measurement value 
+	agent_id = status["agent_id"]
+	x = status["x"]
+	y = status["y"]
+	z = status["z"]
+	
+ 	#self.json_dict_samples['sample_values'].append({"agent_id":agent_id, "x": x, "y": y,  "z": z, "measurement_type":measurement_type, "measurement_value":measurement_value})
+	print("Got status update from agent: "+str(agent_id)+ "x: "+ str(x) + "y: "+str(y)+ "z: "+str(z))
+
 ############################# Publisher functions ##############################
     def compute_POIs(self):
 	

@@ -44,6 +44,9 @@ class SamplingAgent:
         # What function to call when you ctrl + c    
         rospy.on_shutdown(self.shutdown)
 
+	# create a publisher for location	
+        self.status_pub = rospy.Publisher('/update/status', String, queue_size=10)
+
 	# create a publisher for samples	
         self.sample_pub = rospy.Publisher('/sample/data', String, queue_size=10)
 
@@ -95,9 +98,10 @@ class SamplingAgent:
 	
 	# when the agent is in the location it is supposed to be in, it takes the relevant sample
 	#TODO: add a marginal error 
+	print("Fix this !!!") 
+           
 	if self.x == self.POI_x and self.y == self.POI_y and self.z == self.POI_z:
-	    print("Fix this !!!")	    
-            measurement_value = get_sample(self.POI_type)
+	    measurement_value = get_sample(self.POI_type)
 	    
 	    # send a message with the data  	
 	    if measurement_value is not None:
@@ -109,6 +113,19 @@ class SamplingAgent:
                 # publish action
                 self.sample_pub.publish(json.dumps(self.json_dict))
 
+    # publish status
+    def publish_status(self):
+	print("publish location")
+	
+        self.active_task = False	
+        # reset the data - and send it  	
+        self.json_dict = {"status": []}
+
+	# Boolean variables for sampling taks 
+        self.json_dict['status'].append({"agent_id":self.agent_id, "x": self.x, "y": self.y,  "z": self.z})
+
+        # publish action
+        self.status_pub.publish(json.dumps(self.json_dict))
 
 
 
@@ -128,6 +145,7 @@ class SamplingAgent:
 	    # if the agent is on a mission, then it should check if it can sample
 	    if self.active_task:
 	    	self.publish_sample()	
+	    self.publish_status()
             self.rate.sleep()
     
     def shutdown(self):
