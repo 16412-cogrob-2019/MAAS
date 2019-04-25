@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 # imports
 import sys
 import numpy as np
@@ -14,7 +15,7 @@ class MAAS_Controller:
     def __init__(self):
 
          # subscribers
-        self.mcts_sub = rospy.Subscriber("/sample/data", String, self.data_callback)
+        self.poi_sub = rospy.Subscriber("/maas/data", String, self.data_callback)
 	# POI command publisher   	
 	self.goto_pub = rospy.Publisher('/sample/goto', String, queue_size = 10) # jsonified data
 	    
@@ -25,22 +26,24 @@ class MAAS_Controller:
 	# json loads
         temp_data = json.loads(data.data)
 	
-	print("I got a sample - how exciting!")
+	print("I got the POIs - how exciting!")
 	print(data.data)
 	
 	# get POI
 	message = json.loads(data.data)
-	poi = message["sample"][0]
+	poi = message['POIs'][0]
 	#agent_id = sample["agent_id"]
 	x = poi["x"]
 	y = poi["y"]
 	z = poi["z"]
 	measurement_type = poi["measurement_type"]
+	score = poi["score"]
 
+	agent_id = 1
 
 	# reset the data - and send it  	
-	self.json_dict = {'POI': []}
-	self.json_dict['POI'].append({"x": x, "y": y,  "z": z, "measurement_type":measurement_type})
+	self.json_dict = {'GoTo': []}
+	self.json_dict['GoTo'].append({"agent_id":agent_id, "x": x, "y": y,  "z": z, "measurement_type":measurement_type})
 	
         # publish action
         self.goto_pub.publish(json.dumps(self.json_dict))

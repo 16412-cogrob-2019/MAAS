@@ -28,6 +28,10 @@ class SamplingAgent:
 
         # Boolean variables for sampling taks 
         self.active_task = False
+	self.POI_x = 0
+	self.POI_y = 0
+	self.POI_z = 0
+	self.POI_type = "depth"
 
         # Linear movement speed
         self.lin_speed = 0.2  # m/s
@@ -56,28 +60,54 @@ class SamplingAgent:
         self.rate = rospy.Rate(10)
 
     def go_to_waypoint(self, data):
-
-	self.active_task = False
+	message = json.loads(data.data)
+	goTo_message = message['GoTo'][0]
+	
+	# get the agent_id, x and y and z locations of the agent's location, measurement type (e.g. depth), and measurement value 
+	agent_id = goTo_message["agent_id"]
+	self.POI_x = goTo_message["x"]
+	self.POI_y = goTo_message["y"]
+	self.POI_z = goTo_message["z"]
+	self.POI_type = goTo_message["measurement_type"]
+	
 	print("I got a command to move")
 	print(data)
+	if agent_id != self.agent_id:
+	    print("This command is not for me :-(")
+	else:
+	    self.active_task = True
+	    print("Preparing to move to: "+ str(self.POI_x) + " " + str(self.POI_y) + " " + str(self.POI_z)+ " " + self.POI_type)		
 
-    	
+    def get_sample(self, measurement_type): 
+	
+	measurement_value = None
+ 	print("in publish sample")	
+	
+	if measurement_type == "depth":
+	    measurement_value = simulator.caldera_sim_function(self.x, self.y)
+	else:
+            print("Sorry: only depth supported!")
+		
+	return measurement_value
 
     # publish a sample 
     def publish_sample(self):
 	
-	print("in publish sample")	
-	# the point to estimate
-	measurement_type = "depth"
+	# when the agent is in the location it is supposed to be in, it takes the relevant sample
+	#TODO: add a marginal error 
+	if self.x == self.POI_x and self.y == self.POI_y and self.z == self.POI_z:
+	    print("Fix this !!!")	    
+            measurement_value = get_sample(self.POI_type)
+	    
+	    # send a message with the data  	
+	    if measurement_value is not None:
+	        self.active_task = False	
+	        # reset the data - and send it  	
+	        self.json_dict = {"sample": []}
+	        self.json_dict['sample'].append({"agent_id":self.agent_id, "x": self.x, "y": self.y,  "z": self.z, "measurement_type":measurement_type, "measurement_value":measurement_value})
 	
-	measurement_value = simulator.caldera_sim_function(self.x, self.y)#10005.5
-	
-	# reset the data - and send it  	
-	self.json_dict = {"sample": []}
-	self.json_dict['sample'].append({"agent_id":self.agent_id, "x": self.x, "y": self.y,  "z": self.z, "measurement_type":measurement_type, "measurement_value":measurement_value})
-	
-        # publish action
-        self.sample_pub.publish(json.dumps(self.json_dict))
+                # publish action
+                self.sample_pub.publish(json.dumps(self.json_dict))
 
 
 
@@ -95,7 +125,9 @@ class SamplingAgent:
         while not rospy.is_shutdown():
             move_cmd.linear.x = self.lin_speed
             move_cmd.angular.z = 0
-	    self.publish_sample()	
+	    # if the agent is on a mission, then it should check if it can sample
+	    if self.active_task:
+	    	self.publish_sample()	
             self.rate.sleep()
     
     def shutdown(self):

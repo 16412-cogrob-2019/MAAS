@@ -15,7 +15,6 @@ class Test_Subscriber:
 
          # subscribers
         self.mcts_sub = rospy.Subscriber("/maas/data", String, self.data_callback)
-
      
     
     def data_callback(self, data):

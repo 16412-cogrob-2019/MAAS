@@ -16,7 +16,7 @@ class MAAS_node:
     def __init__(self, num_of_points):
 
         # subscribers
-        self.mcts_sub = rospy.Subscriber("/sample/data", String, self.sampled_data_callback)
+        self.sample_sub = rospy.Subscriber("/sample/data", String, self.sampled_data_callback)
 
         # publishers
         self.maas_pub = rospy.Publisher('/maas/data', String, queue_size = 10) # jsonified data
@@ -61,7 +61,9 @@ class MAAS_node:
 	    y = 5.2
 	    z = 3.4
 	    measurement_type = "depth"	
- 	    self.POIs['POIs'].append({"x": x, "y": y,  "z": z, "measurement_type":measurement_type})
+	    score = 5.5
+
+ 	    self.POIs['POIs'].append({"x": x, "y": y,  "z": z, "measurement_type":measurement_type, "score":score})
 	
 
     def publish_points(self):
