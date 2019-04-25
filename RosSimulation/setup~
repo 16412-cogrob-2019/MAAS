@@ -4,7 +4,7 @@ launch the gazebo simulation:
 
 	Standard:
 	---------
-	roslaunch turtlebot_gazebo turtlebot_world.launch world_file:=/home/sarah/cognitive_robotics/RosSimulation/ros_proj/room-nowalls.world
+	roslaunch turtlebot_gazebo turtlebot_world.launch world_file:=/home/sarah/cognitive_robotics/RosSimulation/ros_proj/room-nowalls-color.world
 
 
 	With EKF

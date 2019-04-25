@@ -10,48 +10,47 @@ import rospy
 from std_msgs.msg import String
 
 
-class Test_Class:
+class Test_Sampler:
+
     def __init__(self):
 
         # publishers
-        self.test_pub = rospy.Publisher('/mcts/data', String, queue_size = 10) # jsonified data
-   	
-     	# subscribers
-        self.mcts_sub = rospy.Subscriber("/maas/data", String, self.data_callback)
-
-     
+        self.test_pub = rospy.Publisher('/sample/data', String, queue_size = 10) # jsonified data
+ 	    
         # some other stuff
-        self.json_dict = {"data_request": []}
+        self.json_dict = {"sample": []}
 
-    def test_publish(self):
+	self.agent_id = 1 	
+	self.x = 1
+	self.y = 2
+	self.z = 4
 	
-	# the point to estimate 	
-	x =1
-	y =2
 
+    # publish a sample 
+    def publish_sample(self):
+	
+	# the point to estimate
+	measurement_type = "depth"
+	measurement_value = 5.5
+	
 	# reset the data - and send it  	
-	self.json_dict = {"data_request": []}
-	self.json_dict['data_request'].append({"x": x, "y": y})
+	self.json_dict = {"sample": []}
+	self.json_dict['sample'].append({"agent_id":agent_id, "x": x, "y": y,  "z": z, "measurement_type":measurement_type, "measurement_value":measurement_value})
 	
         # publish action
         self.test_pub.publish(json.dumps(self.json_dict))
     
-    def data_callback(self, data):
-
-        # json loads
-        temp_data = json.loads(data.data)
-	
-	print("I got a call back - how exciting!")
-	print(data.data)
+    
 
 
 ############################# Main #############################################
 def main():
+
     # init ros node
-    rospy.init_node('test', anonymous = True)
+    rospy.init_node('test_sampler', anonymous = True)
 
     # class instance
-    test_instance = Test_Class()
+    test_instance = Test_Sampler()
 
     # create ros loop
     pub_rate = 10 # hertz
@@ -59,7 +58,7 @@ def main():
 
     while (not rospy.is_shutdown()):
         # pack something in a json object
-        test_instance.test_publish()
+        test_instance.publish_sample()
 
         # ros sleep (sleep to maintain loop rate)
         rate.sleep()
