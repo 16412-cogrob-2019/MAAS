@@ -54,7 +54,7 @@ class SamplingAgent:
         rospy.Subscriber('/sample/goto', String, self.go_to_waypoint)
 
         # Create a publisher which can "talk" to TurtleBot wheels and tell it to move
-        self.cmd_vel = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)
+        #self.cmd_vel = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)
 
         # Subscribe to queues for receiving sensory data
         #rospy.Subscriber('mobile_base/events/bumper', BumperEvent, self.process_bump_sensing)
@@ -115,7 +115,6 @@ class SamplingAgent:
 
     # publish status
     def publish_status(self):
-	print("publish location")
 	
         self.active_task = False	
         # reset the data - and send it  	
@@ -125,7 +124,7 @@ class SamplingAgent:
         self.json_dict['status'].append({"agent_id":self.agent_id, "x": self.x, "y": self.y,  "z": self.z})
 
         # publish action
-        self.status_pub.publish(json.dumps(self.json_dict))
+        self.sample_pub.publish(json.dumps(self.json_dict))
 
 
 
@@ -142,13 +141,10 @@ class SamplingAgent:
         while not rospy.is_shutdown():
             move_cmd.linear.x = self.lin_speed
             move_cmd.angular.z = 0
-  	    # publish the velocity
-            self.cmd_vel.publish(move_cmd)
-          
 	    # if the agent is on a mission, then it should check if it can sample
 	    if self.active_task:
 	    	self.publish_sample()	
-	    self.publish_status()
+	    self.publis_status()
             self.rate.sleep()
     
     def shutdown(self):
@@ -159,7 +155,7 @@ class SamplingAgent:
         # stop turtlebot
         rospy.loginfo("Stop TurtleBot")
         # a default Twist has linear.x of 0 and angular.z of 0.  So it'll stop TurtleBot
-        self.cmd_vel.publish(Twist())
+        #self.cmd_vel.publish(Twist())
         # sleep just makes sure TurtleBot receives the stop command prior to shutting down the script
         rospy.sleep(5)
 

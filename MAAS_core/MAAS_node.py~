@@ -50,8 +50,6 @@ class MAAS_node:
 	samples = message["samples"]
 	
 	# TODO : DECIDE HOW TO KEEP THIS INFORMATION
-	# TODO : HOW DO WE GET THE ROBOT's LOCATION ?
-
 	for agent_id in xrange(len(samples)):
  	    self.json_dict_samples['sample_values'].append({"agent_id":agent_id, "x": x, "y": y,  "z": z, "measurement_type":measurement_type, "measurement_value":measurement_value})
 	
