@@ -37,13 +37,16 @@ class MAAS_node:
     ############################# Subscriber Callback functions ####################
 
     def sampled_data_callback(self, data):
+        """
+        :type data: ActivityDone
+        """
         print("receieved sample data")
-        message = json.loads(data.data)
-        activity_id = message["activity_id"]
-        activity_name = message["activity_name"]
-        samples = message["samples"]
-        samples_x_vals = message["x_vals"]
-        samples_y_vals = message["y_vals"]
+        # message = json.loads(data.data)
+        activity_id = data.activity_id #message["activity_id"]
+        activity_name = data.activity_name # message["activity_name"]
+        samples = data.samples # message["samples"]
+        samples_x_vals = data.x_vals #  message["x_vals"]
+        samples_y_vals = data.y_vals # message["y_vals"]
 
         for agent_id in xrange(len(samples)):
             cur_sample = samples[agent_id]
@@ -53,7 +56,7 @@ class MAAS_node:
             self.json_dict_samples['sample_values'].append(
                 {"x": cur_sample_x, "y": cur_sample_y, "sample_value": cur_sample})
 
-        print(self.json_dict['sample_values'])
+        print(self.json_dict_samples['sample_values'])
 
     ############################# Publisher functions ##############################
     def compute_POIs(self):
@@ -64,11 +67,11 @@ class MAAS_node:
         dim_x, dim_y = 2, 2
         pbounds = {'x': (0, dim_x), 'y': (0, dim_y)}
         num_suggested_points = self.num_of_points
-        samples = self.json_dict_samples
-        # print(samples)
+        samples = [({'x': s['x'], 'y': s['y']}, s['sample_value']) for s in self.json_dict_samples['sample_values']]
+        print(samples)
         utility = UtilityFunction(kind="ucb", kappa=100, xi=0.0)
 
-        suggested_points = suggest_points(num_suggested_points, utility, pbounds, samples['sample_values'])
+        suggested_points = suggest_points(num_suggested_points, utility, pbounds, samples)
         for i, point in enumerate(suggested_points):
             self.POIs['POIs'].append({"x": point['x'], "y": point['y'],
                                       #"z": 0,
