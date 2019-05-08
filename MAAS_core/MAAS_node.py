@@ -20,7 +20,7 @@ class MAAS_node:
         self.sample_sub = rospy.Subscriber('/activity/done', ActivityDone, self.sampled_data_callback, queue_size=10)
 
         # publishers
-        self.maas_pub = rospy.Publisher('/maas/data', String, queue_size=10)  # jsonified data
+        self.maas_pub = rospy.Publisher('/maas/poi_data', String, queue_size=10)  # jsonified data
 
         # number of POI points to publish
         self.num_of_points = num_of_points
@@ -57,6 +57,7 @@ class MAAS_node:
                 {"x": cur_sample_x, "y": cur_sample_y, "sample_value": cur_sample})
 
         print(self.json_dict_samples['sample_values'])
+        self.publish_points()
 
     ############################# Publisher functions ##############################
     def compute_POIs(self):
@@ -79,11 +80,10 @@ class MAAS_node:
         # print(self.POIs)
 
     def publish_points(self):
-
         # compute k best points
         self.compute_POIs()
         # publish action
-        self.maas_pub.publish(json.dumps(self.POIs))
+        self.maas_pub.publish(json.dumps(self.POIs['POIs']))
 
 
 ############################# Main #############################################
@@ -95,13 +95,13 @@ def main():
     MAAS_instance = MAAS_node(5, 1)
 
     # create ros loop
-    pub_rate = 1  # hertz
+    pub_rate = 0.5 # hertz
     rate = rospy.Rate(pub_rate)
 
     while (not rospy.is_shutdown()):
         # do some stuff if necessary
-        print("Publish Points of Interest")
-        MAAS_instance.publish_points()
+        print("MAAS node is alive...")
+        # MAAS_instance.publish_points()
 
         # ros sleep (sleep to maintain loop rate)
         rate.sleep()
