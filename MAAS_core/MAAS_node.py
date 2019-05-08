@@ -4,7 +4,9 @@
 import sys
 import numpy as np
 import json
+from MAAS_core import suggest_points
 from mission_controller.msg import ActivityDone
+from bayes_opt import UtilityFunction
 
 # ros imports
 import rospy
@@ -57,16 +59,21 @@ class MAAS_node:
     def compute_POIs(self):
         # reset map
         self.POIs = {"POIs": []}
-        print("compute")
+        # print("compute")
 
-        for i in xrange(self.num_of_points):
-            x = 3.3 + i
-            y = 5.2
-            z = 3.4
-            measurement_type = "depth"
-            score = 5.5
+        dim_x, dim_y = 2, 2
+        pbounds = {'x': (0, dim_x), 'y': (0, dim_y)}
+        num_suggested_points = self.num_of_points
+        samples = self.json_dict_samples
+        # print(samples)
+        utility = UtilityFunction(kind="ucb", kappa=100, xi=0.0)
 
-            self.POIs['POIs'].append({"x": x, "y": y, "z": z, "measurement_type": measurement_type, "score": score})
+        suggested_points = suggest_points(num_suggested_points, utility, pbounds, samples['sample_values'])
+        for i, point in enumerate(suggested_points):
+            self.POIs['POIs'].append({"x": point['x'], "y": point['y'],
+                                      #"z": 0,
+                                      "poi_id": i, "poi_reward": point['reward']})
+        # print(self.POIs)
 
     def publish_points(self):
 

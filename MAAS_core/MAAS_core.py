@@ -1,8 +1,8 @@
 import numpy as np 
 from bayes_opt import BayesianOptimization, UtilityFunction
-from caldera_mcts import *
-from utils import *
-import matplotlib.mlab as mlab
+# from caldera_mcts import *
+# from utils import *
+# import matplotlib.mlab as mlab
 from copy import deepcopy
 
 '''
@@ -56,25 +56,25 @@ for i in range(num_robots):
 '''
 
 def suggest_points(num_suggested_points, utility_fn, pbounds, samples):
-
-	optimizer = BayesianOptimization(f=caldera_sim_function, pbounds=pbounds, verbose=2, random_state=1)
+	optimizer = BayesianOptimization(f=lambda x, y: 0, pbounds=pbounds, verbose=2, random_state=1)
 	for s in samples:
 		optimizer.register(params=s[0], target=s[1])
 
 	points_to_suggest = []
 
 	for i in range(num_suggested_points):
-
-		print('Sample', i)
+		# print('Sample', i)
 		next_point = optimizer.suggest(utility_fn)
 		next_point_arr = [next_point['x'], next_point['y']]
 		next_point_arr_np = np.atleast_2d(np.array(next_point_arr))
 
-		target = optimizer._gp.predict(next_point_arr_np)
+		target, std = optimizer._gp.predict(next_point_arr_np, return_std=True)
 		target = target[0]
 
 		optimizer.register(params=next_point, target=target)
-		points_to_suggest.append(next_point)
+		point_with_reward = next_point.copy()
+		point_with_reward['reward'] = utility_fn.utility(next_point_arr_np, optimizer._gp, 0)[0]
+		points_to_suggest.append(point_with_reward)
 
 	return points_to_suggest
 
