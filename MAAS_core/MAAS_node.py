@@ -14,26 +14,27 @@ from map import Map
 import rospy
 from std_msgs.msg import String
 
+
 class Position():
     def __init__(self, x, y):
         self.x = x
-        self.y = y     
+        self.y = y
 
 
 class MAAS_node:
 
-    def __init__(self, x_low = -0.27, x_up = 1.9, y_low = -2.5, y_high = 0.3, dim_x = 2,  dim_y = 2):
+    def __init__(self, x_low=-0.27, x_up=1.9, y_low=-2.5, y_high=0.3, dim_x=2, dim_y=2):
         # subscribers
         self.sample_sub = rospy.Subscriber('/activity/done', ActivityDone, self.sampled_data_callback, queue_size=10)
-	# subscribe to the map (which publishes occupancy grid)	
-	namespace = rospy.get_param('namespace')
-	self.map_sub = rospy.Subscriber(namespace+"/map", OccupancyGrid, self.map_callback)
+        # subscribe to the map (which publishes occupancy grid)
+        namespace = rospy.get_param('namespace')
+        self.map_sub = rospy.Subscriber(namespace + "/map", OccupancyGrid, self.map_callback)
 
         # publishers
         self.maas_pub = rospy.Publisher('/maas/poi_data', String, queue_size=10)  # jsonified data
 
         # number of active agents
-	self.num_of_agents = rospy.get_param('n_agents')
+        self.num_of_agents = rospy.get_param('n_agents')
 
         # number of POI points to publish
         self.num_of_points = rospy.get_param('n_pois')
@@ -47,19 +48,18 @@ class MAAS_node:
         # number of POI points to publish
         self.agent_locations = {"agent_locs": []}
 
-	# setting the sampling bounds 
-	self.x_low = x_low
-	self.x_up = x_up
-	self.y_low = y_low
-	self.y_high = y_high 
-	
-	# the sampling grid
+        # setting the sampling bounds
+        self.x_low = x_low
+        self.x_up = x_up
+        self.y_low = y_low
+        self.y_high = y_high
+
+        # the sampling grid
         self.dim_x = dim_x
-	self.dim_y = dim_y
+        self.dim_y = dim_y
 
-	# the occupancy grid
-	self.occ_grid = None
-
+        # the occupancy grid
+        self.occ_grid = None
 
     ############################# Subscriber Callback functions ####################
 
@@ -69,11 +69,11 @@ class MAAS_node:
         """
         rospy.loginfo("receieved sample data")
         # message = json.loads(data.data)
-        activity_id = data.activity_id #message["activity_id"]
-        activity_name = data.activity_name # message["activity_name"]
-        samples = data.samples # message["samples"]
-        samples_x_vals = data.x_vals #  message["x_vals"]
-        samples_y_vals = data.y_vals # message["y_vals"]
+        activity_id = data.activity_id  # message["activity_id"]
+        activity_name = data.activity_name  # message["activity_name"]
+        samples = data.samples  # message["samples"]
+        samples_x_vals = data.x_vals  # message["x_vals"]
+        samples_y_vals = data.y_vals  # message["y_vals"]
 
         for agent_id in xrange(len(samples)):
             cur_sample = samples[agent_id]
@@ -91,9 +91,9 @@ class MAAS_node:
         # reset map
         self.POIs = {"POIs": []}
         # print("compute")
-   
+
         pbounds = {'x': (self.x_low, self.x_up), 'y': (self.y_low, self.y_high)}
-        #pbounds = {'x': (0, dim_x), 'y': (0, dim_y)}
+        # pbounds = {'x': (0, dim_x), 'y': (0, dim_y)}
         num_suggested_points = self.num_of_points
         samples = [({'x': s['x'], 'y': s['y']}, s['sample_value']) for s in self.json_dict_samples['sample_values']]
         print(samples)
@@ -101,14 +101,14 @@ class MAAS_node:
 
         suggested_points = suggest_points(num_suggested_points, utility, pbounds, samples)
         for i, point in enumerate(suggested_points):
-	    # test occupency grid	
-	    # occupency_val = self.map.get_cell_val(point['x'],point['y'])
-	    occupency_val = -888
-	    rospy.loginfo('occupency_val of suggested point is: %d'%occupency_val)
-	    if occupency_val < 0.1:
+            # test occupency grid
+            occupency_val = self.map.get_cell_val(point['x'], point['y'])
+            # occupency_val = -888
+            rospy.loginfo('occupency_val of suggested point is: %d' % occupency_val)
+            if occupency_val < 0.1:
                 self.POIs['POIs'].append({"x": point['x'], "y": point['y'],
-                                      #"z": 0,
-                                      "poi_id": i, "poi_reward": point['reward']})
+                                          # "z": 0,
+                                          "poi_id": i, "poi_reward": point['reward']})
         # print(self.POIs)
 
     def publish_points(self):
@@ -124,8 +124,6 @@ class MAAS_node:
         self.map = Map(msg)
 
 
-
-
 ############################# Main #############################################
 def main():
     # init ros node
@@ -135,7 +133,7 @@ def main():
     MAAS_instance = MAAS_node()
 
     # create ros loop
-    pub_rate = 0.5 # hertz
+    pub_rate = 0.5  # hertz
     rate = rospy.Rate(pub_rate)
 
     while (not rospy.is_shutdown()):
