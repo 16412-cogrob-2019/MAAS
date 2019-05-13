@@ -7,10 +7,17 @@ import json
 from MAAS_core import suggest_points
 from mission_controller.msg import ActivityDone
 from bayes_opt import UtilityFunction
+from nav_msgs.msg import OccupancyGrid
+from map import Map
 
 # ros imports
 import rospy
 from std_msgs.msg import String
+
+class Position():
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y     
 
 
 class MAAS_node:
@@ -18,6 +25,9 @@ class MAAS_node:
     def __init__(self, x_low = -0.27, x_up = 1.9, y_low = -2.5, y_high = 0.3, dim_x = 2,  dim_y = 2):
         # subscribers
         self.sample_sub = rospy.Subscriber('/activity/done', ActivityDone, self.sampled_data_callback, queue_size=10)
+	# subscribe to the map (which publishes occupancy grid)	
+	namespace = rospy.get_param('namespace')
+	self.map_sub = rospy.Subscriber(namespace+"/map", OccupancyGrid, self.map_callback)
 
         # publishers
         self.maas_pub = rospy.Publisher('/maas/poi_data', String, queue_size=10)  # jsonified data
@@ -47,6 +57,9 @@ class MAAS_node:
         self.dim_x = dim_x
 	self.dim_y = dim_y
 
+	# the occupancy grid
+	self.occ_grid = None
+
 
     ############################# Subscriber Callback functions ####################
 
@@ -54,7 +67,7 @@ class MAAS_node:
         """
         :type data: ActivityDone
         """
-        print("receieved sample data")
+        rospy.loginfo("receieved sample data")
         # message = json.loads(data.data)
         activity_id = data.activity_id #message["activity_id"]
         activity_name = data.activity_name # message["activity_name"]
@@ -88,16 +101,29 @@ class MAAS_node:
 
         suggested_points = suggest_points(num_suggested_points, utility, pbounds, samples)
         for i, point in enumerate(suggested_points):
-            self.POIs['POIs'].append({"x": point['x'], "y": point['y'],
+	    # test occupency grid	
+	    # occupency_val = self.map.get_cell_val(point['x'],point['y'])
+	    occupency_val = -888
+	    rospy.loginfo('occupency_val of suggested point is: %d'%occupency_val)
+	    if occupency_val < 0.1:
+                self.POIs['POIs'].append({"x": point['x'], "y": point['y'],
                                       #"z": 0,
                                       "poi_id": i, "poi_reward": point['reward']})
         # print(self.POIs)
 
     def publish_points(self):
+        rospy.loginfo("computing new POI's")
         # compute k best points
         self.compute_POIs()
         # publish action
         self.maas_pub.publish(json.dumps(self.POIs['POIs']))
+
+    # MAP DATA
+    def map_callback(self, msg):
+        rospy.loginfo("[MAAS] Received map data!")
+        self.map = Map(msg)
+
+
 
 
 ############################# Main #############################################
