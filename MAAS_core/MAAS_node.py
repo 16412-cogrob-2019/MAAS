@@ -15,15 +15,18 @@ from std_msgs.msg import String
 
 class MAAS_node:
 
-    def __init__(self, num_of_points, numb_of_agents):
+    def __init__(self, x_low = -0.27, x_up = 1.9, y_low = -2.5, y_high = 0.3, dim_x = 2,  dim_y = 2):
         # subscribers
         self.sample_sub = rospy.Subscriber('/activity/done', ActivityDone, self.sampled_data_callback, queue_size=10)
 
         # publishers
         self.maas_pub = rospy.Publisher('/maas/poi_data', String, queue_size=10)  # jsonified data
 
+        # number of active agents
+	self.num_of_agents = rospy.get_param('n_agents')
+
         # number of POI points to publish
-        self.num_of_points = num_of_points
+        self.num_of_points = rospy.get_param('n_pois')
 
         # data samples collected so far
         self.json_dict_samples = {"sample_values": []}
@@ -33,6 +36,17 @@ class MAAS_node:
 
         # number of POI points to publish
         self.agent_locations = {"agent_locs": []}
+
+	# setting the sampling bounds 
+	self.x_low = x_low
+	self.x_up = x_up
+	self.y_low = y_low
+	self.y_high = y_high 
+	
+	# the sampling grid
+        self.dim_x = dim_x
+	self.dim_y = dim_y
+
 
     ############################# Subscriber Callback functions ####################
 
@@ -64,9 +78,9 @@ class MAAS_node:
         # reset map
         self.POIs = {"POIs": []}
         # print("compute")
-
-        dim_x, dim_y = 2, 2
-        pbounds = {'x': (0, dim_x), 'y': (0, dim_y)}
+   
+        pbounds = {'x': (self.x_low, self.x_up), 'y': (self.y_low, self.y_high)}
+        #pbounds = {'x': (0, dim_x), 'y': (0, dim_y)}
         num_suggested_points = self.num_of_points
         samples = [({'x': s['x'], 'y': s['y']}, s['sample_value']) for s in self.json_dict_samples['sample_values']]
         print(samples)
@@ -92,7 +106,7 @@ def main():
     rospy.init_node('MAAS', anonymous=True)
 
     # class instance
-    MAAS_instance = MAAS_node(5, 1)
+    MAAS_instance = MAAS_node()
 
     # create ros loop
     pub_rate = 0.5 # hertz
@@ -100,7 +114,7 @@ def main():
 
     while (not rospy.is_shutdown()):
         # do some stuff if necessary
-        print("MAAS node is alive...")
+        rospy.logdebug("MAAS node is alive...")
         # MAAS_instance.publish_points()
 
         # ros sleep (sleep to maintain loop rate)
