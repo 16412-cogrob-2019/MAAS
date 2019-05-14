@@ -48,15 +48,15 @@ class MAAS_node:
         # number of POI points to publish
         self.agent_locations = {"agent_locs": []}
 
-        # setting the sampling bounds
-        self.x_low = x_low
-        self.x_up = x_up
-        self.y_low = y_low
-        self.y_high = y_high
-
-        # the sampling grid
+	# setting the sampling bounds 
+	self.x_low = x_low + 0.2
+	self.x_up = x_up - 0.2
+	self.y_low = y_low + 0.2
+	self.y_high = y_high - 0.2
+	
+	# the sampling grid
         self.dim_x = dim_x
-        self.dim_y = dim_y
+	self.dim_y = dim_y
 
         # the occupancy grid
         self.occ_grid = None
@@ -82,7 +82,7 @@ class MAAS_node:
 
             self.json_dict_samples['sample_values'].append(
                 {"x": cur_sample_x, "y": cur_sample_y, "sample_value": cur_sample})
-
+	rospy.loginfo("updates sample dicts")
         print(self.json_dict_samples['sample_values'])
         self.publish_points()
 
@@ -97,25 +97,25 @@ class MAAS_node:
         num_suggested_points = self.num_of_points
         samples = [({'x': s['x'], 'y': s['y']}, s['sample_value']) for s in self.json_dict_samples['sample_values']]
         rospy.loginfo(samples)
-        utility = UtilityFunction(kind="ucb", kappa=1, xi=0.0)
+        utility = UtilityFunction(kind="ucb", kappa=10, xi=0.0)
 
         suggested_points = suggest_points(num_suggested_points, utility, pbounds, samples)
         for i, point in enumerate(suggested_points):
             # test occupency grid
-            occupency_val = self.map.get_cell_val(point['x'], point['y'])
-            rospy.loginfo('point')
-            rospy.loginfo(point)
-            rospy.loginfo('occupency_val of suggested point is: %d' % occupency_val)
+            #occupency_val = self.map.get_cell_val(point['x'], point['y'])
+            occupency_val = -888
             if occupency_val < 0.1:
                 self.POIs['POIs'].append({"x": point['x'], "y": point['y'],
                                           # "z": 0,
                                           "poi_id": i, "poi_reward": point['reward']})
-        # print(self.POIs)
+	print('computed POIs are: ')        
+	print(self.POIs)
 
     def publish_points(self):
         rospy.loginfo("computing new POI's")
         # compute k best points
         self.compute_POIs()
+	rospy.loginfo("done computing - publishing POI's")
         # publish action
         self.maas_pub.publish(json.dumps(self.POIs['POIs']))
 
