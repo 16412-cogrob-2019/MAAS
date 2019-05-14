@@ -96,14 +96,15 @@ class MAAS_node:
         # pbounds = {'x': (0, dim_x), 'y': (0, dim_y)}
         num_suggested_points = self.num_of_points
         samples = [({'x': s['x'], 'y': s['y']}, s['sample_value']) for s in self.json_dict_samples['sample_values']]
-        print(samples)
-        utility = UtilityFunction(kind="ucb", kappa=100, xi=0.0)
+        rospy.loginfo(samples)
+        utility = UtilityFunction(kind="ucb", kappa=1, xi=0.0)
 
         suggested_points = suggest_points(num_suggested_points, utility, pbounds, samples)
         for i, point in enumerate(suggested_points):
             # test occupency grid
             occupency_val = self.map.get_cell_val(point['x'], point['y'])
-            # occupency_val = -888
+            rospy.loginfo('point')
+            rospy.loginfo(point)
             rospy.loginfo('occupency_val of suggested point is: %d' % occupency_val)
             if occupency_val < 0.1:
                 self.POIs['POIs'].append({"x": point['x'], "y": point['y'],

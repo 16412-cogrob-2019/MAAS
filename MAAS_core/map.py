@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from nav_msgs.msg import OccupancyGrid
 import scipy.ndimage
 
-
+import rospy
 class Map:
     """docstring for Map"""
 
@@ -35,9 +35,8 @@ class Map:
 
     def get_cell_val(self, x, y):
         cell_pos_x, cell_pos_y = self.get_cell_pos([x, y])
-        print(type(self.grid))
-        print(self.grid)
-
+        rospy.loginfo('np.min(self.grid)')
+      	rospy.loginfo(np.min(self.grid))  
         val = self.grid[cell_pos_x][cell_pos_y]
         return val
 
