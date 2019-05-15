@@ -4,7 +4,7 @@
 import sys
 import numpy as np
 import json
-from MAAS_core import suggest_points
+from MAAS_core import *
 from mission_controller.msg import ActivityDone
 from bayes_opt import UtilityFunction
 from nav_msgs.msg import OccupancyGrid
@@ -99,7 +99,7 @@ class MAAS_node:
         rospy.loginfo(samples)
         utility = UtilityFunction(kind="ucb", kappa=10, xi=0.0)
 
-        suggested_points = suggest_points(num_suggested_points, utility, pbounds, samples)
+        suggested_points = suggest_points_ts(num_suggested_points, utility, pbounds, samples)
         for i, point in enumerate(suggested_points):
             # test occupency grid
             #occupency_val = self.map.get_cell_val(point['x'], point['y'])
