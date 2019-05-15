@@ -11,7 +11,7 @@ def suggest_points(num_suggested_points, utility_fn, pbounds, samples, use_new_k
                                                  alpha=1e-6,
                                                  normalize_y=True,
                                                  n_restarts_optimizer=25,
-                                                 random_state=optimizer._gp._random_state, )
+                                                 random_state=optimizer._random_state)
     for s in samples:
         if s not in list(optimizer._space._params):
             optimizer.register(params=s[0], target=s[1])
